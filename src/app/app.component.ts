@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {
   PxConnectionSettingsService,
   PxHttpService,
+  PxInfo,
   PxInfoService,
   PxLogin,
   PxLoginService
@@ -44,26 +45,26 @@ export class AppComponent implements OnInit {
 
   private checkConnection(): void {
     this.printLog("Prüfe Verbindung...");
-    this.infoService.getInfo().subscribe(
-      info => {
+    this.infoService.getInfo().subscribe({
+      next: (info: PxInfo) => {
         this.printLog(`Verbindung besteht, REST API Version: ${info.Version}`);
         this.doLogin();
       },
-      error => this.printError(`Verbindung konnte nicht hergestellt werden: ${JSON.stringify(error)}`)
-    );
+      error: (error: Error) => this.printError(`Verbindung konnte nicht hergestellt werden: ${JSON.stringify(error)}`)
+    });
   }
 
   private doLogin(): void {
     this.printLog("Versuche Login...");
-    this.loginService.doLogin(this.login).subscribe(
-      login => {
+    this.loginService.doLogin(this.login).subscribe({
+      next: (login: PxLogin) => {
         this.login = login;
         const mitarbeiter = this.login.Mitarbeiter as Mitarbeiter;
         this.printLog(`Login erfolgreich: ${mitarbeiter.Name}`);
         this.getStundeninfo();
       },
-      loginError => this.printError(`Login fehlgeschlagen: ${JSON.stringify(loginError)}`)
-    );
+      error: (loginError: Error) => this.printError(`Login fehlgeschlagen: ${JSON.stringify(loginError)}`)
+    });
   }
 
   private getStundeninfo(): void {
