@@ -68,10 +68,10 @@ export class AppComponent implements OnInit {
 
   private getStundeninfo(): void {
     this.printLog("Stundeninfo abrufen...");
-    this.httpService.get<Stundeninfo>("/ZEI/Stundeninfo").subscribe(
-      stundeninfo => this.printLog(`Stundeninfo abrufen erfolgreich, aktueller Stundensaldo: ${stundeninfo?.SaldoVortag}`), // TODO: MSC check if null/undefined
-      stundeninfoError => this.printError(`Stundeninfo abrufen fehlgeschlagen: ${JSON.stringify(stundeninfoError)}`)
-    );
+    this.httpService.get<Stundeninfo>("/ZEI/Stundeninfo").subscribe({
+      next: (stundeninfo: Stundeninfo) => this.printLog(`Stundeninfo abrufen erfolgreich, aktueller Stundensaldo: ${stundeninfo?.SaldoVortag}`),
+      error: (stundeninfoError: Error) => this.printError(`Stundeninfo abrufen fehlgeschlagen: ${JSON.stringify(stundeninfoError)}`)
+    });
   }
 
   private printLog(text: string): void {

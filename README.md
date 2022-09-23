@@ -1,27 +1,96 @@
-# RestapiAngularLibrary
+PROFFIX REST API Library für Angular
+====================================
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.2.3.
+Die PROFFIX REST API Library für [Angular](https://angular.io) ermöglicht die einfache Kommunikation mit der PROFFIX REST API in Angular-
+Anwendungen. Die Library ist unabhängig von der grafischen Oberfläche und kann mit Ionic oder anderen Frameworks verwendet werden.
 
-## Development server
+Erste Schritte
+--------------
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Ein lauffähiges Angular-Projekt muss vorhanden sein. Über die [Angular CLI](https://cli.angular.io) lässt sich das einfach erstellen.
 
-## Code scaffolding
+### 1. Library im Projekt installieren
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Die Library ist über npm verfügbar: `npm install @proffix/restapi-angular-library --save`
 
-## Build
+### 2. Konfiguration und Bootstrapping
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Es muss eine von `Configuration` vererbte Klasse erstellt werden, in der die beiden abstrakten Methoden `requiredWebserviceVersion` und
+`requiredLicencedModules` überschrieben werden müssen.
 
-## Running unit tests
+```ts
+import { Injectable } from '@angular/core';
+import { PxConfiguration, PxModule, PxVersion } from '@proffix/restapi-angular-library';
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+@Injectable()
+export class AppConfiguration extends PxConfiguration {
+  public get requiredWebserviceVersion(): PxVersion {
+    return { Major: 4, Minor: 0, Patch: 0 };
+  }
+  public get requiredLicencedModules(): string[] {
+    return [ "ZEI", "ADR" ];
+  }
+}
+```
 
-## Running end-to-end tests
+Die `AppConfiguration` muss *Injectable* sein, da sie dem dem Dependency Injector als `Configuration` für die Library mitgegeben werden muss.
+Zusätzliche wird das `PxRestApiModule` geladen und über `PxRestApiModule.forRoot()` importiert.
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+```ts
+// Root Module (src/app.module.ts)
 
-## Further help
+import { PxRestApiModule, PxConfiguration } from '@proffix/restapi-angular-library';
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+// ...
+imports: [ PxRestApiModule.forRoot() ],
+providers: [
+  AppConfiguration,
+  { provide: PxConfiguration, useExisting: AppConfiguration }
+],
+// ...
+```
+
+### 3. Verbindungseinstellungen hinterlegen
+
+Die Verbindungseinstellungen (Klasse `ConnectionSettings`) werden durch den `ConnectionSettingsService` im LocalStorage abgelegt.
+
+```ts
+// Angular Component
+
+import { PxConnectionSettings, PxConnectionSettingsService } from '@proffix/restapi-angular-library';
+
+// ...
+constructor(private connectionSettingsService: PxConnectionSettingsService) {
+  let connectionSettings: PxConnectionSettings =  {
+    WebserviceUrl: "https://restapi.company.invalid",
+    WebservicePasswortHash: "d3612ab62..."
+  };
+  connectionSettingsService.save(connectionSettings);
+}
+```
+
+Hinweis: Der SHA256 kann über die statische Methode `Hash.sha256` erstellt werden, nachdem die Klasse `Hash` importiert wurde.
+
+### 4. Login durchführen
+
+Der Login kann durchgeführt werden, wenn gültige Verbindungseinstellungen hinterlegt wurden.
+
+```ts
+// Angular Component
+
+import { PxLogin, PxLoginService, PxConfiguration } from '@proffix/restapi-angular-library';
+
+// ...
+constructor(private loginService: PxLoginService, private configuration: PxConfiguration) {
+  let login: PxLogin =  {
+    Benutzer: "pxuser",
+    Passwort: "d3612ab62...",
+    Datenbank: { Name: "PXDB" },
+    Module: this.configuration.getRequiredLicencedModulesAsStringArray() // Die Module können aus der AppConfiguration gelesen werden
+  };
+  this.loginService.doLogin(login).subscribe( // nur zu Anschauungszwecken, nie HTTP-Requests in einem Konstruktor absetzen
+      login => console.log("Login successful: " + login.Benutzer),
+      error => console.log("Login failed")
+    );
+}
+```

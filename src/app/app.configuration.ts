@@ -10,6 +10,6 @@ export class AppConfiguration extends PxConfiguration {
     return { Major: 4, Minor: 0, Patch: 0 };
   }
   public get requiredLicencedModules(): string[] {
-    return ["VOL"];
+    return ["ZEI", "ADR"];
   }
 }
