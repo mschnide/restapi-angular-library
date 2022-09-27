@@ -60,7 +60,7 @@ export class AppComponent implements OnInit {
       next: (login: PxLogin) => {
         this.login = login;
         const mitarbeiter = this.login.Mitarbeiter as Mitarbeiter;
-        this.printLog(`Login erfolgreich: ${mitarbeiter.Name}`);
+        this.printLog(`Login erfolgreich: ${mitarbeiter?.MitarbeiterNr > 0 ? 'Ja' : 'Nein'}`);
         this.getStundeninfo();
       },
       error: (loginError: Error) => this.printError(`Login fehlgeschlagen: ${JSON.stringify(loginError)}`)
