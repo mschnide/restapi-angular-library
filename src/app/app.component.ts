@@ -10,6 +10,8 @@ import {
 import { AppConfiguration } from './app.configuration';
 import { Mitarbeiter } from './models/mitarbeiter';
 import { Stundeninfo } from './models/stundeninfo';
+import { Stundenart } from './models/stundenart';
+import { PxDateFormatter } from 'lib';
 
 @Component({
   selector: 'app-root',
@@ -60,8 +62,9 @@ export class AppComponent implements OnInit {
       next: (login: PxLogin) => {
         this.login = login;
         const mitarbeiter = this.login.Mitarbeiter as Mitarbeiter;
-        this.printLog(`Login erfolgreich: ${mitarbeiter?.MitarbeiterNr > 0 ? 'Ja' : 'Nein'}`);
+        this.printLog(`Login erfolgreich: ${mitarbeiter?.MitarbeiterNr > 0 ? 'Ja' : 'Nein'} ${JSON.stringify(mitarbeiter)}`);
         this.getStundeninfo();
+        this.getStundenart();
       },
       error: (loginError: Error) => this.printError(`Login fehlgeschlagen: ${JSON.stringify(loginError)}`)
     });
@@ -72,6 +75,14 @@ export class AppComponent implements OnInit {
     this.httpService.get<Stundeninfo>("/ZEI/Stundeninfo").subscribe({
       next: (stundeninfo: Stundeninfo) => this.printLog(`Stundeninfo abrufen erfolgreich, aktueller Stundensaldo: ${stundeninfo?.SaldoVortag}`),
       error: (stundeninfoError: Error) => this.printError(`Stundeninfo abrufen fehlgeschlagen: ${JSON.stringify(stundeninfoError)}`)
+    });
+  }
+
+  private getStundenart(): void {
+    this.printLog("Stundenart abrufen...");
+    this.httpService.get<Stundenart[]>("/ZEI/Stundenart").subscribe({
+      next: (stundenart: Stundenart[]) => this.printLog(`Stundenart: ${JSON.stringify(stundenart[0])} ${PxDateFormatter.toPxDateString(stundenart[0].ErstelltAm)}`),
+      error: (stundenartError: Error) => this.printError(`Stundenart abrufen fehlgeschlagen: ${JSON.stringify(stundenartError)}`)
     });
   }
 
